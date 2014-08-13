@@ -1,4 +1,4 @@
-### python-bond Perl interface setup
+### bond Perl interface setup
 ### NOTE: use ### for comments only, as this code is transformed into a single
 ###       line to be injected into the interpreter *without parsing*.
 use strict;
@@ -15,5 +15,5 @@ sub
   my $stage2 = JSON::decode_json($line);
 
   eval $stage2->{code};
-  __PY_BOND_start(@{$stage2->{start}});
+  __BOND_start(@{$stage2->{start}});
 }->();

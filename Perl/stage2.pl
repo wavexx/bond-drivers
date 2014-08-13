@@ -1,4 +1,4 @@
-# python-bond Perl interface setup
+# bond Perl interface setup
 use strict;
 use warnings;
 require IO::Handle;
@@ -9,13 +9,13 @@ require Scalar::Util;
 
 
 # Channels and buffers
-my %__PY_BOND_BUFFERS =
+my %__BOND_BUFFERS =
 (
   "STDOUT" => IO::String->new(),
   "STDERR" => IO::String->new()
 );
 
-my %__PY_BOND_CHANNELS =
+my %__BOND_CHANNELS =
 (
   "STDIN" => *STDIN,
   "STDOUT" => *STDOUT,
@@ -25,7 +25,7 @@ my %__PY_BOND_CHANNELS =
 
 # Our minimal exception signature
 {
-  package _PY_BOND_SerializationException;
+  package _BOND_SerializationException;
 
   use overload '""' => sub { __PACKAGE__ . ': ' . ${shift()} . '\n' };
 
@@ -38,57 +38,57 @@ my %__PY_BOND_CHANNELS =
 
 
 # Serialization methods
-my $__PY_BOND_JSON = JSON->new()->allow_nonref();
+my $__BOND_JSON = JSON->new()->allow_nonref();
 
-sub __PY_BOND_dumps
+sub __BOND_dumps
 {
   my $data = shift;
-  my $code = eval { $__PY_BOND_JSON->encode($data) };
-  die _PY_BOND_SerializationException->new("cannot encode $data") if $@;
+  my $code = eval { $__BOND_JSON->encode($data) };
+  die _BOND_SerializationException->new("cannot encode $data") if $@;
   return $code;
 }
 
-sub __PY_BOND_loads
+sub __BOND_loads
 {
-  return $__PY_BOND_JSON->decode(@_);
+  return $__BOND_JSON->decode(@_);
 }
 
 
 # Define our own i/o methods
-sub __PY_BOND_getline()
+sub __BOND_getline()
 {
-  my $stdin = $__PY_BOND_CHANNELS{STDIN};
+  my $stdin = $__BOND_CHANNELS{STDIN};
   my $line = <$stdin>;
   chomp($line) if defined($line);
   return $line;
 }
 
-sub __PY_BOND_sendline
+sub __BOND_sendline
 {
   my $line = shift // "";
-  my $stdout = $__PY_BOND_CHANNELS{STDOUT};
+  my $stdout = $__BOND_CHANNELS{STDOUT};
   print $stdout "$line\n";
 }
 
 
 # Recursive repl
-my $__PY_BOND_TRANS_EXCEPT;
+my $__BOND_TRANS_EXCEPT;
 
-sub __PY_BOND_call($$)
+sub __BOND_call($$)
 {
   my ($name, $args) = @_;
-  my $code = __PY_BOND_dumps([$name, $args]);
-  __PY_BOND_sendline("CALL $code");
-  return __PY_BOND_repl();
+  my $code = __BOND_dumps([$name, $args]);
+  __BOND_sendline("CALL $code");
+  return __BOND_repl();
 }
 
-sub __PY_BOND_repl()
+sub __BOND_repl()
 {
   my $SENTINEL = 1;
-  while(my $line = __PY_BOND_getline())
+  while(my $line = __BOND_getline())
   {
     my ($cmd, $args) = split(/ /, $line, 2);
-    $args = __PY_BOND_loads($args) if defined($args);
+    $args = __BOND_loads($args) if defined($args);
 
     my $ret = undef;
     my $err = undef;
@@ -113,7 +113,7 @@ sub __PY_BOND_repl()
     }
     elsif($cmd eq "EXPORT")
     {
-      my $code = "sub $args { __PY_BOND_call('$args', \\\@_) }";
+      my $code = "sub $args { __BOND_call('$args', \\\@_) }";
       $ret = eval $code;
       $err = $@;
     }
@@ -143,7 +143,7 @@ sub __PY_BOND_repl()
     }
     elsif($cmd eq "ERROR")
     {
-      die _PY_BOND_SerializationException->new($args);
+      die _BOND_SerializationException->new($args);
     }
     else
     {
@@ -151,13 +151,13 @@ sub __PY_BOND_repl()
     }
 
     # redirected channels
-    while(my ($channel, $buffer) = each %__PY_BOND_BUFFERS)
+    while(my ($channel, $buffer) = each %__BOND_BUFFERS)
     {
       if(tell($buffer))
       {
 	my $output = ${$buffer->string_ref};
-	my $code = __PY_BOND_dumps([$channel, $output]);
-	__PY_BOND_sendline("OUTPUT $code");
+	my $code = __BOND_dumps([$channel, $output]);
+	__BOND_sendline("OUTPUT $code");
 	seek($buffer, 0, 0);
 	truncate($buffer, 0);
       }
@@ -167,7 +167,7 @@ sub __PY_BOND_repl()
     my $state = "RETURN";
     if($err)
     {
-      if(Scalar::Util::blessed($err) && $err->isa('_PY_BOND_SerializationException'))
+      if(Scalar::Util::blessed($err) && $err->isa('_BOND_SerializationException'))
       {
 	$state = "ERROR";
 	$ret = $$err;
@@ -175,35 +175,35 @@ sub __PY_BOND_repl()
       else
       {
 	$state = "EXCEPT";
-	$ret = ($__PY_BOND_TRANS_EXCEPT? $err: "$err");
+	$ret = ($__BOND_TRANS_EXCEPT? $err: "$err");
       }
     }
-    my $code = eval { __PY_BOND_dumps($ret) };
+    my $code = eval { __BOND_dumps($ret) };
     if($@)
     {
       $state = "ERROR";
-      $code = __PY_BOND_dumps(${$@});
+      $code = __BOND_dumps(${$@});
     }
-    __PY_BOND_sendline("$state $code");
+    __BOND_sendline("$state $code");
   }
   return 0;
 }
 
-sub __PY_BOND_start($$)
+sub __BOND_start($$)
 {
   my ($proto, $trans_except) = @_;
 
   *STDIN = IO::Handle->new();
-  *STDOUT = $__PY_BOND_BUFFERS{STDOUT};
-  *STDERR = $__PY_BOND_BUFFERS{STDERR};
+  *STDOUT = $__BOND_BUFFERS{STDOUT};
+  *STDERR = $__BOND_BUFFERS{STDERR};
   $SIG{__WARN__} = sub
   {
     print STDERR shift;
   };
 
-  $__PY_BOND_TRANS_EXCEPT = $trans_except;
-  __PY_BOND_sendline("READY");
-  my $ret = __PY_BOND_repl();
-  __PY_BOND_sendline("BYE");
+  $__BOND_TRANS_EXCEPT = $trans_except;
+  __BOND_sendline("READY");
+  my $ret = __BOND_repl();
+  __BOND_sendline("BYE");
   exit($ret);
 }

@@ -1,87 +1,87 @@
-// python-bond Javascript interface setup
+// bond Javascript interface setup
 var util = require("util");
 
 // Channels and buffers
-var __PY_BOND_BUFFERS = {
+var __BOND_BUFFERS = {
   "STDOUT": "",
   "STDERR": ""
 };
 
-var __PY_BOND_CHANNELS = {
-  "STDIN": __PY_BOND_STDIN,
+var __BOND_CHANNELS = {
+  "STDIN": __BOND_STDIN,
   "STDOUT": fs.openSync("/dev/stdout", "w"),
   "STDERR": fs.openSync("/dev/stderr", "w")
 };
 
 
 // Define our own i/o methods
-function __PY_BOND_sendline(line)
+function __BOND_sendline(line)
 {
   if(line == null) line = "";
   var buf = new Buffer(line + "\n");
-  fs.writeSync(__PY_BOND_CHANNELS["STDOUT"], buf, 0, buf.length);
+  fs.writeSync(__BOND_CHANNELS["STDOUT"], buf, 0, buf.length);
 }
 
 
 // Our minimal exception signature
-function _PY_BOND_SerializationException(message)
+function _BOND_SerializationException(message)
 {
   this.message = message;
 }
 
-util.inherits(_PY_BOND_SerializationException, TypeError);
-_PY_BOND_SerializationException.prototype.name = "_PY_BOND_SerializationException";
+util.inherits(_BOND_SerializationException, TypeError);
+_BOND_SerializationException.prototype.name = "_BOND_SerializationException";
 
 
 // Serialization methods
-function __PY_BOND_typecheck(key, value)
+function __BOND_typecheck(key, value)
 {
   if(typeof value === 'function' && value.toJSON == null)
     throw new TypeError("cannot serialize " + Object.getPrototypeOf(value));
   return value;
 }
 
-function __PY_BOND_dumps(data)
+function __BOND_dumps(data)
 {
   var ret;
-  try { ret = JSON.stringify(data, __PY_BOND_typecheck); }
-  catch(e) { throw new _PY_BOND_SerializationException(e.toString()); }
+  try { ret = JSON.stringify(data, __BOND_typecheck); }
+  catch(e) { throw new _BOND_SerializationException(e.toString()); }
   return ret;
 }
 
-function __PY_BOND_loads(string)
+function __BOND_loads(string)
 {
   return JSON.parse(string);
 }
 
 
 // Recursive repl
-var __PY_BOND_TRANS_EXCEPT;
+var __BOND_TRANS_EXCEPT;
 
-function __PY_BOND_call(name, args)
+function __BOND_call(name, args)
 {
-  var code = __PY_BOND_dumps([name, args]);
-  __PY_BOND_sendline("CALL " + code);
-  return __PY_BOND_repl();
+  var code = __BOND_dumps([name, args]);
+  __BOND_sendline("CALL " + code);
+  return __BOND_repl();
 }
 
-function __PY_BOND_export(name)
+function __BOND_export(name)
 {
   global[name] = function()
   {
-    return __PY_BOND_call(name, Array.prototype.slice.call(arguments));
+    return __BOND_call(name, Array.prototype.slice.call(arguments));
   };
 }
 
-function __PY_BOND_repl()
+function __BOND_repl()
 {
   var SENTINEL = 1;
   var line;
-  while((line = __PY_BOND_getline()))
+  while((line = __BOND_getline()))
   {
     line = /^([^ ]+)( (.*))?/.exec(line);
     var cmd = line[1];
-    var args = (line[3] !== undefined? __PY_BOND_loads(line[3]): []);
+    var args = (line[3] !== undefined? __BOND_loads(line[3]): []);
 
     var ret = null;
     var err = null;
@@ -98,7 +98,7 @@ function __PY_BOND_repl()
       break;
 
     case "EXPORT":
-      __PY_BOND_export(args);
+      __BOND_export(args);
       break;
 
     case "CALL":
@@ -122,21 +122,21 @@ function __PY_BOND_repl()
       throw new Error(args);
 
     case "ERROR":
-      throw new _PY_BOND_SerializationException(args);
+      throw new _BOND_SerializationException(args);
 
     default:
       process.exit(1);
     }
 
     // redirected channels
-    for(var chan in __PY_BOND_BUFFERS)
+    for(var chan in __BOND_BUFFERS)
     {
-      var buf = __PY_BOND_BUFFERS[chan];
+      var buf = __BOND_BUFFERS[chan];
       if(buf.length)
       {
-	var code = __PY_BOND_dumps([chan, buf]);
-	__PY_BOND_sendline("OUTPUT " + code);
-	__PY_BOND_BUFFERS[chan] = "";
+	var code = __BOND_dumps([chan, buf]);
+	__BOND_sendline("OUTPUT " + code);
+	__BOND_BUFFERS[chan] = "";
       }
     }
 
@@ -144,7 +144,7 @@ function __PY_BOND_repl()
     var state = "RETURN";
     if(err != null)
     {
-      if(err instanceof _PY_BOND_SerializationException)
+      if(err instanceof _BOND_SerializationException)
       {
 	state = "ERROR";
 	ret = err.message;
@@ -152,35 +152,35 @@ function __PY_BOND_repl()
       else
       {
 	state = "EXCEPT";
-	ret = (__PY_BOND_TRANS_EXCEPT? err: err.toString());
+	ret = (__BOND_TRANS_EXCEPT? err: err.toString());
       }
     }
     var code;
     try
     {
       if(ret == null) ret = null;
-      code = __PY_BOND_dumps(ret);
+      code = __BOND_dumps(ret);
     }
     catch(e)
     {
       state = "ERROR";
-      code = __PY_BOND_dumps(e.message);
+      code = __BOND_dumps(e.message);
     }
-    __PY_BOND_sendline(state + " " + code);
+    __BOND_sendline(state + " " + code);
   }
   return 0;
 }
 
-function __PY_BOND_start(proto, trans_except)
+function __BOND_start(proto, trans_except)
 {
   // TODO: this is a hack
-  process.stdout.write = function(buf) { __PY_BOND_BUFFERS["STDOUT"] += buf; };
-  process.stderr.write = function(buf) { __PY_BOND_BUFFERS["STDERR"] += buf; };
+  process.stdout.write = function(buf) { __BOND_BUFFERS["STDOUT"] += buf; };
+  process.stderr.write = function(buf) { __BOND_BUFFERS["STDERR"] += buf; };
   process.stdin.read = function() { return undefined; };
 
-  __PY_BOND_TRANS_EXCEPT = trans_except;
-  __PY_BOND_sendline("READY");
-  var ret = __PY_BOND_repl();
-  __PY_BOND_sendline("BYE");
+  __BOND_TRANS_EXCEPT = trans_except;
+  __BOND_sendline("READY");
+  var ret = __BOND_repl();
+  __BOND_sendline("BYE");
   process.exit(ret);
 }
