@@ -7,7 +7,79 @@ Ambivalent bonds between interpreted languages (protocol drivers)
 
 .. contents::
 
-TODO
+The ``bond`` protocol is a *simple*, line-based serial protocol based on JSON
+implementing a remote/recursive procedure call interface for command-line
+interpreters.
+
+Documentation is still incomplete. Please refer to the current reference host
+implementation for further information:
+
+  https://github.com/wavexx/python-bond
+
+
+Driver matrix
+=============
+
+========== ==== ==== ======== ====== ====== ===== ========= ========
+Language   Call Eval Ev/Block Except Export N/Ser Recursive Trans/Ex
+========== ==== ==== ======== ====== ====== ===== ========= ========
+JavaScript ✓    ✓    ✓        ✓      ✓      ✓     ✓         ✓
+PHP        ✓    ✓    ✓        ✓      ✓            ✓         ✓
+Perl       ✓    ✓    ✓        ✓      ✓            ✓         ✓
+Python     ✓    ✓    ✓        ✓      ✓      ✓     ✓         ✓
+========== ==== ==== ======== ====== ====== ===== ========= ========
+
+Call:
+  Can "call" a native function by applying the supplied list of arguments to a
+  function name, statement or expression.
+
+Eval:
+  Can evaluate an arbitrary statement and return it's value.
+
+Ev/Block:
+  Can evaluate an arbitrary code block in the top-level.
+
+Except:
+  Can forward exceptions back to the caller.
+
+Export:
+  Can accept foreign functions to be called natively.
+
+N/Ser:
+  Supports the native serialization method of the language in addition to JSON.
+
+Recursive:
+  Evaluation is fully recursive (a foreign method can call back native code).
+
+Trans/Ex:
+  Allows exceptions themselves to be serialized.
+
+
+Host matrix
+===========
+
+======== ====== ====== ===== ========= ========
+Language Except Export N/Ser Recursive Trans/Ex
+======== ====== ====== ===== ========= ========
+Python_  ✓      ✓      ✓     ✓         ✓
+======== ====== ====== ===== ========= ========
+
+Except:
+  Can forward local exceptions to the driver.
+
+Export:
+  Can export a local function to the driver.
+
+N/Ser:
+  Supports the native serialization method of the language in addition to JSON.
+
+Recursive:
+  Evaluation is fully recursive (an exported method can call back the driver).
+
+Trans/Ex:
+  Allows exceptions themselves to be serialized.
+
+.. _Python: https://github.com/wavexx/python-bond
 
 
 Authors and Copyright
