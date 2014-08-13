@@ -39,21 +39,44 @@ def __BOND_sendstate(state, code=None):
     __BOND_sendline(line)
 
 
+# Serialization protocols
+class __BOND_PICKLE(object):
+    @staticmethod
+    def dumps(*args):
+        return repr(pickle.dumps(args, 0)).encode('utf-8')
+
+    @staticmethod
+    def loads(buf):
+        dec = eval(buf.decode('utf-8'))
+        if not isinstance(dec, bytes): dec = dec.encode('utf-8')
+        return pickle.loads(dec)[0]
+
+
+class __BOND_JSON(object):
+    @staticmethod
+    def loads(buf):
+        return json.loads(buf.decode('utf-8'))
+
+    @staticmethod
+    def dumps(*args):
+        return json.dumps(*args, skipkeys=False).encode('utf-8')
+
+
 # Serialization methods
 class _BOND_SerializationException(TypeError):
     pass
 
+__BOND_PROTO = None
+
 def __BOND_dumps(*args):
     try:
-        ret = repr(pickle.dumps(args, 0)).encode('utf-8')
-    except (TypeError, pickle.PicklingError):
+        ret = __BOND_PROTO.dumps(*args)
+    except:
         raise _BOND_SerializationException("cannot encode {data}".format(data=str(args)))
     return ret
 
 def __BOND_loads(buf):
-    dec = eval(buf.decode('utf-8'))
-    if not isinstance(dec, bytes): dec = dec.encode('utf-8')
-    return pickle.loads(dec)[0]
+    return __BOND_PROTO.loads(buf)
 
 
 # Recursive repl
@@ -138,7 +161,15 @@ def __BOND_repl():
 
 
 def __BOND_start(proto, trans_except):
-    global __BOND_TRANS_EXCEPT, __BOND_BUFFERS, __BOND_CHANNELS
+    global __BOND_PROTO, __BOND_TRANS_EXCEPT
+    global __BOND_BUFFERS, __BOND_CHANNELS
+
+    if proto == "PICKLE":
+        __BOND_PROTO = __BOND_PICKLE
+    elif proto == "JSON":
+        __BOND_PROTO = __BOND_JSON
+    else:
+        raise Exception('unknown protocol "{proto}"'.format(proto))
 
     if isinstance(sys.stdout, io.TextIOWrapper):
         for buf in __BOND_BUFFERS:

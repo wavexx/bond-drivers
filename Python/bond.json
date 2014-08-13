@@ -1,7 +1,7 @@
 {
   "lang": "Python",
   "command": [["python", "-i"]],
-  "proto": ["PICKLE"],
+  "proto": ["PICKLE", "JSON"],
   "init": {
     "probe": "print(\"stage1\\n\".upper())",
     "stage1": {
