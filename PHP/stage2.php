@@ -1,3 +1,4 @@
+//<?php
 // bond PHP interface setup
 
 // Redirect normal output

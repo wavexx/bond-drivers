@@ -1,3 +1,4 @@
+///<?php
 /// bond PHP interface loader
 /// NOTE: use /// for comments *only*, as this code is transformed into a
 ///       single line to be injected into the interpreter *without parsing*.

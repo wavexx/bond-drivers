@@ -12,7 +12,7 @@ implementing a remote/recursive procedure call interface for command-line
 interpreters.
 
 ``bond`` allows different languages to call each other, with the only
-requirement of an open communication to a REPL.
+requirement of an open communication channel to a REPL.
 
 Documentation is still incomplete. Please refer to the current reference host
 implementation for further information:
