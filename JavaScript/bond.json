@@ -1,6 +1,9 @@
 {
   "lang": "JavaScript",
-  "command": [["nodejs", "-i"]],
+  "command": [
+    ["nodejs", "-i"],
+    ["node", "-i"]
+  ],
   "proto": ["JSON"],
   "init": {
     "probe": "console.log(\"stage1\".toUpperCase());",
