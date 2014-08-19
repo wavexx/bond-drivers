@@ -4,7 +4,11 @@
 use strict;
 use warnings;
 require IO::Handle;
-require JSON;
+
+### check external dependencies
+require IO::String or die($@);
+require Data::Dump or die($@);
+require JSON or die($@);
 
 sub
 {

@@ -3,8 +3,8 @@ use strict;
 use warnings;
 require IO::Handle;
 require IO::String;
-require JSON;
 require Data::Dump;
+require JSON;
 require Scalar::Util;
 
 
