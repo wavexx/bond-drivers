@@ -2,7 +2,7 @@
   "lang": "JavaScript",
   "command": [
     ["nodejs", "-i"],
-    ["node", "-i"]
+    ["node"]
   ],
   "proto": ["JSON"],
   "init": {
