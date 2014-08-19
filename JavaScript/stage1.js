@@ -23,7 +23,8 @@ function __BOND_getline()
 (function()
 {
   console.log("STAGE2");
-  var line = __BOND_getline();
+  var line;
+  while((line = __BOND_getline()).length == 0);
   var stage2 = JSON.parse(line);
   eval.call(null, stage2.code);
   __BOND_start.apply(null, stage2.start);
