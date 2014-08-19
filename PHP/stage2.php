@@ -70,13 +70,47 @@ function __BOND_sendline($line = '')
 }
 
 
+// some utilities to get/reset the error state
+$__BOND_last_error = null;
+
+function __BOND_error($errno, $errstr, $errfile, $errline, $errcontext)
+{
+  global $__BOND_last_error;
+  $__BOND_last_error = $errstr;
+  if(!(error_reporting() & $errno)) return;
+  fwrite(STDERR, $errstr);
+}
+
+function __BOND_clear_error()
+{
+  global $__BOND_last_error;
+  $__BOND_last_error = null;
+  restore_error_handler();
+  @trigger_error(null);
+  set_error_handler('__BOND_error');
+}
+
+function __BOND_get_error()
+{
+  // the normal error handler can't trap all errors (notably, parse errors).
+  // we need a mixture of both our custom handler and the PHP error state to
+  // trap correctly all errors in PHP<5.6
+  global $__BOND_last_error;
+  if($__BOND_last_error) return $__BOND_last_error;
+  $err = error_get_last();
+  if($err) $err = $err["message"];
+  return $err;
+}
+
+
 // Serialization methods
 class _BOND_SerializationException extends Exception {}
 
 function __BOND_dumps($data)
 {
-  $code = json_encode($data);
-  if(json_last_error())
+  __BOND_clear_error();
+  $code = @json_encode($data);
+  if(json_last_error() || __BOND_get_error())
     throw new _BOND_SerializationException(@"cannot encode $data");
   return $code;
 }
@@ -84,22 +118,6 @@ function __BOND_dumps($data)
 function __BOND_loads($string)
 {
   return json_decode($string);
-}
-
-
-// some utilities to get/reset the error state
-function __BOND_clear_error()
-{
-  set_error_handler(null, 0);
-  @trigger_error(null);
-  restore_error_handler();
-}
-
-function __BOND_get_error()
-{
-  $err = error_get_last();
-  if($err) $err = $err["message"];
-  return $err;
 }
 
 
@@ -278,6 +296,7 @@ function __BOND_repl()
 function __BOND_start($proto, $trans_except)
 {
   global $__BOND_TRANS_EXCEPT;
+  set_error_handler('__BOND_error');
   ob_start('__BOND_output');
   $__BOND_TRANS_EXCEPT = (bool)($trans_except);
   __BOND_sendline("READY");
