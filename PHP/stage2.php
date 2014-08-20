@@ -107,7 +107,7 @@ function __BOND_get_error()
   $err = error_get_last();
   if($err && !empty($err['message']))
   {
-    if($err['type'] & error_reporting())
+    if(ini_get('display_errors') && ($err['type'] & error_reporting()))
     {
       $type = __BOND_error_type($err['type']);
       fwrite(STDERR, "PHP[$type]: " . $err['message'] . "\n");
