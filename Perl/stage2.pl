@@ -82,6 +82,14 @@ sub __BOND_call($$)
   return __BOND_repl();
 }
 
+sub __BOND_eval
+{
+  # we use a stub function to reset Perl and hide our local scope
+  no strict;
+  no warnings;
+  eval shift;
+}
+
 sub __BOND_repl()
 {
   my $SENTINEL = 1;
@@ -94,21 +102,15 @@ sub __BOND_repl()
     my $err = undef;
     if($cmd eq "EVAL")
     {
-      no strict;
-      no warnings;
-
-      # NOTE: force evaluation in array context to avoid swallowing lists
-      $ret = [eval $args];
+      # force evaluation in array context to avoid swallowing lists
+      $ret = [__BOND_eval($args)];
       $err = $@;
       $ret = $ret->[0] if @$ret == 1;
     }
     elsif($cmd eq "EVAL_BLOCK")
     {
-      no strict;
-      no warnings;
-
-      # NOTE: discard return, as with Perl it would most likely be a CODE ref
-      eval $args;
+      # discard return, as with Perl it would most likely be a CODE ref
+      __BOND_eval($args);
       $err = $@;
     }
     elsif($cmd eq "EXPORT")
