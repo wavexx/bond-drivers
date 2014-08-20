@@ -77,8 +77,8 @@ function __BOND_error($errno, $errstr, $errfile, $errline, $errcontext)
 {
   global $__BOND_last_error;
   $__BOND_last_error = $errstr;
-  if(!(error_reporting() & $errno)) return;
-  fwrite(STDERR, $errstr);
+  if(($errno & error_reporting()))
+    fwrite(STDERR, $errstr);
 }
 
 function __BOND_clear_error()
@@ -149,20 +149,17 @@ function __BOND_eval($code)
 
 function __BOND_exec($code)
 {
-  $SENTINEL = 1;
-  $prefix = "__BOND";
-  $prefix_len = strlen($prefix);
-  $prefix = var_export($prefix, true);
-
   // like "eval", but exports any local definition to the global scope
+  $SENTINEL = 1;
   __BOND_clear_error();
   @eval("call_user_func(function()
   {
-    extract(\$GLOBALS);
+    extract(\$GLOBALS, EXTR_REFS);
     { $code }
     \$__BOND_vars = get_defined_vars();
     foreach(\$__BOND_vars as \$k => &\$v)
-      \$GLOBALS[\$k] = &\$v;
+      if(!isset(\$GLOBALS[\$k]))
+        \$GLOBALS[\$k] = \$v;
     foreach(array_keys(\$GLOBALS) as \$k)
       if(!isset(\$__BOND_vars[\$k]))
         unset(\$GLOBALS[\$k]);
