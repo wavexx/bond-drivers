@@ -12,7 +12,7 @@ except ImportError:
 
 # Redirect normal output
 def __BOND_buffer_stdio(obj):
-    if isinstance(obj, io.TextIOWrapper):
+    if isinstance(obj, io.TextIOBase):
         ret = io.TextIOWrapper(io.BytesIO())
         ret.getvalue = lambda: ret.buffer.getvalue().decode(ret.encoding)
     else:
@@ -26,7 +26,7 @@ __BOND_BUFFERS = {
 }
 
 def __BOND_raw_stdio(obj):
-    return obj.buffer if isinstance(obj, io.TextIOWrapper) else obj
+    return obj.buffer if isinstance(obj, io.TextIOBase) else obj
 
 __BOND_CHANNELS = {
     "STDIN": __BOND_raw_stdio(sys.stdin),
