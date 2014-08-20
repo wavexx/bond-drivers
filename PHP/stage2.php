@@ -71,35 +71,51 @@ function __BOND_sendline($line = '')
 
 
 // some utilities to get/reset the error state
-$__BOND_last_error = null;
+$__BOND_ERROR_LEVEL = null;
 
-function __BOND_error($errno, $errstr, $errfile, $errline, $errcontext)
+function __BOND_error_type($type)
 {
-  global $__BOND_last_error;
-  $__BOND_last_error = $errstr;
-  if(($errno & error_reporting()))
-    fwrite(STDERR, $errstr);
+  switch($type)
+  {
+  case E_ERROR: return 'E_ERROR';
+  case E_WARNING: return 'E_WARNING';
+  case E_PARSE: return 'E_PARSE';
+  case E_NOTICE: return 'E_NOTICE';
+  case E_CORE_ERROR: return 'E_CORE_ERROR';
+  case E_CORE_WARNING: return 'E_CORE_WARNING';
+  case E_CORE_ERROR: return 'E_COMPILE_ERROR';
+  case E_CORE_WARNING: return 'E_COMPILE_WARNING';
+  case E_USER_ERROR: return 'E_USER_ERROR';
+  case E_USER_WARNING: return 'E_USER_WARNING';
+  case E_USER_NOTICE: return 'E_USER_NOTICE';
+  case E_STRICT: return 'E_STRICT';
+  case E_RECOVERABLE_ERROR: return 'E_RECOVERABLE_ERROR';
+  case E_DEPRECATED: return 'E_DEPRECATED';
+  case E_USER_DEPRECATED: return 'E_USER_DEPRECATED';
+  }
+  return $type;
 }
 
 function __BOND_clear_error()
 {
-  global $__BOND_last_error;
-  $__BOND_last_error = null;
-  restore_error_handler();
+  // cheap way to reset the last error state
   @trigger_error(null);
-  set_error_handler('__BOND_error');
 }
 
 function __BOND_get_error()
 {
-  // the normal error handler can't trap all errors (notably, parse errors).
-  // we need a mixture of both our custom handler and the PHP error state to
-  // trap correctly all errors in PHP<5.6
-  global $__BOND_last_error;
-  if($__BOND_last_error) return $__BOND_last_error;
   $err = error_get_last();
-  if($err) $err = $err["message"];
-  return $err;
+  if($err && !empty($err['message']))
+  {
+    if($err['type'] & error_reporting())
+    {
+      $type = __BOND_error_type($err['type']);
+      fwrite(STDERR, "PHP[$type]: " . $err['message'] . "\n");
+    }
+    if($err['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR))
+      return $err;
+  }
+  return false;
 }
 
 
@@ -108,9 +124,8 @@ class _BOND_SerializationException extends Exception {}
 
 function __BOND_dumps($data)
 {
-  __BOND_clear_error();
   $code = @json_encode($data);
-  if(json_last_error() || __BOND_get_error())
+  if($code === false)
     throw new _BOND_SerializationException(@"cannot encode $data");
   return $code;
 }
@@ -143,7 +158,7 @@ function __BOND_eval($code)
     return ($code);
   }, null);");
   $err = __BOND_get_error();
-  if($err) throw new Exception($err);
+  if($err) throw new Exception($err['message']);
   return $ret;
 }
 
@@ -156,16 +171,17 @@ function __BOND_exec($code)
   {
     extract(\$GLOBALS, EXTR_REFS);
     { $code }
-    \$__BOND_vars = get_defined_vars();
-    foreach(\$__BOND_vars as \$k => &\$v)
+    \$__BOND_ERROR_LEVEL = error_reporting();
+    \$__BOND_VARS = get_defined_vars();
+    foreach(\$__BOND_VARS as \$k => &\$v)
       if(!isset(\$GLOBALS[\$k]))
-        \$GLOBALS[\$k] = \$v;
+	\$GLOBALS[\$k] = \$v;
     foreach(array_keys(\$GLOBALS) as \$k)
-      if(!isset(\$__BOND_vars[\$k]))
-        unset(\$GLOBALS[\$k]);
+      if(!isset(\$__BOND_VARS[\$k]))
+	unset(\$GLOBALS[\$k]);
   }, null);");
   $err = __BOND_get_error();
-  if($err) throw new Exception($err);
+  if($err) throw new Exception($err['message']);
 }
 
 function __BOND_repl()
@@ -208,12 +224,17 @@ function __BOND_repl()
       try
       {
 	$name = $args[0];
-	if(preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/", $name) || is_callable($name))
+	if(is_callable($name))
 	{
-	  // special-case regular functions to avoid fatal errors in PHP
+	  // special-case regular functions for performance
 	  __BOND_clear_error();
 	  $ret = @call_user_func_array($args[0], $args[1]);
 	  $err = __BOND_get_error();
+	}
+	elseif(preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/", $name))
+	{
+	  // avoid fatal errors, but still emit proper exceptions as opposed to "warnings"
+	  throw new Exception("undefined function \"$name\"");
 	}
 	else
 	{
@@ -292,9 +313,9 @@ function __BOND_repl()
 
 function __BOND_start($proto, $trans_except)
 {
-  global $__BOND_TRANS_EXCEPT;
-  set_error_handler('__BOND_error');
+  global $__BOND_TRANS_EXCEPT, $__BOND_ERROR_LEVEL;
   ob_start('__BOND_output');
+  $__BOND_ERROR_LEVEL = error_reporting();
   $__BOND_TRANS_EXCEPT = (bool)($trans_except);
   __BOND_sendline("READY");
   $ret = __BOND_repl();
