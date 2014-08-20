@@ -11,15 +11,27 @@ except ImportError:
 
 
 # Redirect normal output
+def __BOND_buffer_stdio(obj):
+    if isinstance(obj, io.TextIOWrapper):
+        ret = io.TextIOWrapper(io.BytesIO())
+        ret.getvalue = lambda: ret.buffer.getvalue().decode(ret.encoding)
+    else:
+        import cStringIO
+        ret = cStringIO.StringIO()
+    return ret
+
 __BOND_BUFFERS = {
-    "STDOUT": io.BytesIO(),
-    "STDERR": io.BytesIO()
+    "STDOUT": __BOND_buffer_stdio(sys.stdout),
+    "STDERR": __BOND_buffer_stdio(sys.stderr)
 }
 
+def __BOND_raw_stdio(obj):
+    return obj.buffer if isinstance(obj, io.TextIOWrapper) else obj
+
 __BOND_CHANNELS = {
-    "STDIN": sys.stdin,
-    "STDOUT": sys.stdout,
-    "STDERR": sys.stderr
+    "STDIN": __BOND_raw_stdio(sys.stdin),
+    "STDOUT": __BOND_raw_stdio(sys.stdout),
+    "STDERR": __BOND_raw_stdio(sys.stderr)
 }
 
 
@@ -134,9 +146,7 @@ def __BOND_repl():
         # redirected channels
         for chan, buf in __BOND_BUFFERS.items():
             if buf.tell():
-                output = buf.getvalue() if not isinstance(buf, io.TextIOWrapper) \
-                  else buf.buffer.getvalue().decode(buf.encoding)
-                code = __BOND_dumps([chan, output])
+                code = __BOND_dumps([chan, buf.getvalue()])
                 __BOND_sendstate("OUTPUT", code)
                 buf.truncate(0)
 
@@ -169,13 +179,7 @@ def __BOND_start(proto, trans_except):
     elif proto == "JSON":
         __BOND_PROTO = __BOND_JSON
     else:
-        raise Exception('unknown protocol "{proto}"'.format(proto))
-
-    if isinstance(sys.stdout, io.TextIOWrapper):
-        for buf in __BOND_BUFFERS:
-            __BOND_BUFFERS[buf] = io.TextIOWrapper(__BOND_BUFFERS[buf])
-        for chan in __BOND_CHANNELS:
-            __BOND_CHANNELS[chan] = __BOND_CHANNELS[chan].detach()
+        raise Exception('unknown protocol "{proto}"'.format(proto=proto))
 
     sys.stdout = __BOND_BUFFERS['STDOUT']
     sys.stderr = __BOND_BUFFERS['STDERR']
