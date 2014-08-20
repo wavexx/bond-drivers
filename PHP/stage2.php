@@ -105,7 +105,7 @@ function __BOND_clear_error()
 function __BOND_get_error()
 {
   $err = error_get_last();
-  if($err && !empty($err['message']))
+  if(!empty($err['message']))
   {
     if(ini_get('display_errors') && ($err['type'] & error_reporting()))
     {
@@ -124,8 +124,10 @@ class _BOND_SerializationException extends Exception {}
 
 function __BOND_dumps($data)
 {
+  __BOND_clear_error();
   $code = @json_encode($data);
-  if($code === false)
+  $err =  error_get_last();
+  if(json_last_error() || !empty($err['message']))
     throw new _BOND_SerializationException(@"cannot encode $data");
   return $code;
 }
