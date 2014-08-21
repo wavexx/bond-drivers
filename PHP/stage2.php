@@ -73,6 +73,17 @@ function __BOND_sendline($line = '')
 // some utilities to get/reset the error state
 $__BOND_ERROR_LEVEL = null;
 
+function _BOND_error_reporting($level = false)
+{
+  // without the ability to trap E_PARSE messages without @ (that is, our
+  // handler is not even called!), and without the ability to redefine/wrap the
+  // standard error_reporting() function, we have no choice but let the users
+  // call our own wrapper directly to control the displayed error level
+  global $__BOND_ERROR_LEVEL;
+  if($level !== false) $__BOND_ERROR_LEVEL = $level;
+  return $__BOND_ERROR_LEVEL;
+}
+
 function __BOND_error_type($type)
 {
   switch($type)
@@ -96,26 +107,27 @@ function __BOND_error_type($type)
   return $type;
 }
 
+function __BOND_error_handler($errno, $errstr)
+{
+  global $__BOND_ERROR_LEVEL;
+  if(!empty($errstr) && ini_get('display_errors') && ($errno & $__BOND_ERROR_LEVEL))
+  {
+    $type = __BOND_error_type($errno);
+    fwrite(STDERR, "PHP[$type]: $errstr\n");
+  }
+  return false;
+}
+
 function __BOND_clear_error()
 {
   // cheap way to reset the last error state
   @trigger_error(null);
 }
 
-function __BOND_get_error()
+function __BOND_get_error($mask = (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR))
 {
   $err = error_get_last();
-  if(!empty($err['message']))
-  {
-    if(ini_get('display_errors') && ($err['type'] & error_reporting()))
-    {
-      $type = __BOND_error_type($err['type']);
-      fwrite(STDERR, "PHP[$type]: " . $err['message'] . "\n");
-    }
-    if($err['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR))
-      return $err;
-  }
-  return false;
+  return (!empty($err['message']) && ($err['type'] & $mask)? $err: false);
 }
 
 
@@ -126,8 +138,7 @@ function __BOND_dumps($data)
 {
   __BOND_clear_error();
   $code = @json_encode($data);
-  $err =  error_get_last();
-  if(json_last_error() || !empty($err['message']))
+  if(__BOND_get_error(E_ALL) || json_last_error())
     throw new _BOND_SerializationException(@"cannot encode $data");
   return $code;
 }
@@ -173,7 +184,6 @@ function __BOND_exec($code)
   {
     extract(\$GLOBALS, EXTR_REFS);
     { $code }
-    \$__BOND_ERROR_LEVEL = error_reporting();
     \$__BOND_VARS = get_defined_vars();
     foreach(\$__BOND_VARS as \$k => &\$v)
       if(!isset(\$GLOBALS[\$k]))
@@ -317,8 +327,11 @@ function __BOND_start($proto, $trans_except)
 {
   global $__BOND_TRANS_EXCEPT, $__BOND_ERROR_LEVEL;
   ob_start('__BOND_output');
-  $__BOND_ERROR_LEVEL = error_reporting();
+
   $__BOND_TRANS_EXCEPT = (bool)($trans_except);
+  $__BOND_ERROR_LEVEL = error_reporting();
+  set_error_handler('__BOND_error_handler');
+
   __BOND_sendline("READY");
   $ret = __BOND_repl();
   __BOND_sendline("BYE");
