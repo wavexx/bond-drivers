@@ -156,7 +156,7 @@ function __BOND_eval($code)
   __BOND_clear_error();
   $ret = @eval("return call_user_func(function()
   {
-    extract(\$GLOBALS);
+    extract(\$GLOBALS, EXTR_REFS);
     return ($code);
   }, null);");
   $err = __BOND_get_error();
