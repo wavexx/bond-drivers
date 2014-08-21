@@ -91,7 +91,7 @@ Trans/Ex:
 Authors and Copyright
 =====================
 
-| "bond-drivers" is distributed under GPL2 (see COPYING) WITHOUT ANY WARRANTY.
+| "bond-drivers" is distributed under the GNU GPLv2+ license (see COPYING).
 | Copyright(c) 2014 by wave++ "Yuri D'Elia" <wavexx@thregr.org>.
 
 bond-drivers's GIT repository is publicly accessible at::
