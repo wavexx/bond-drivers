@@ -124,9 +124,11 @@ function __BOND_clear_error()
   @trigger_error(null);
 }
 
-function __BOND_get_error($mask = (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR))
+function __BOND_get_error($mask = null)
 {
   $err = error_get_last();
+  if(!isset($mask))
+    $mask = (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR);
   return (!empty($err['message']) && ($err['type'] & $mask)? $err: false);
 }
 
