@@ -3,7 +3,7 @@
   "command": [["php", "-a"]],
   "proto": ["JSON"],
   "init": {
-    "wait": "\\n\\n",
+    "wait": "\\r?\\n\\r?\\n",
     "probe": "echo strtoupper(\"stage1\\n\");",
     "stage1": {
       "file": "stage1.php",
