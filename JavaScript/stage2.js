@@ -115,6 +115,24 @@ function __BOND_repl()
       }
       break;
 
+    case "XCALL":
+      try
+      {
+	var func = eval.call(null, "(" + args[0] + ")");
+	var xargs = [];
+	for(var i = 0; i != args[1].length; ++i)
+	{
+	  var arg = args[1][i];
+	  xargs.push(!arg[0]? arg[1]: eval.call(null, "(" + arg[1] + ")"));
+	}
+	ret = func.apply(null, xargs);
+      }
+      catch(e)
+      {
+	err = e;
+      }
+      break;
+
     case "RETURN":
       return args;
 
