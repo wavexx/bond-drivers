@@ -135,6 +135,20 @@ sub __BOND_repl()
       $err = $@;
       $ret = $ret->[0] if @$ret == 1;
     }
+    elsif($cmd eq "XCALL")
+    {
+      my $name = $args->[0];
+      my @xargs;
+      for my $arg(@{$args->[1]})
+      {
+	my $val = (!$arg->[0]? $arg->[1]: __BOND_eval($arg->[1]));
+	push(@xargs, Data::Dump::dump($val));
+      }
+      my $xargs_ = join(",", @xargs);
+      $ret = [__BOND_eval("$name ($xargs_)")];
+      $err = $@;
+      $ret = $ret->[0] if @$ret == 1;
+    }
     elsif($cmd eq "RETURN")
     {
       return $args;
