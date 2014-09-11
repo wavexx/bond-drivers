@@ -131,6 +131,16 @@ def __BOND_repl():
             except Exception as e:
                 err = e
 
+        elif cmd == "XCALL":
+            try:
+                func = eval(args[0], globals())
+                xargs = []
+                for arg in args[1]:
+                    xargs.append(arg[1] if not arg[0] else eval(arg[1], globals()))
+                ret = func(*xargs)
+            except Exception as e:
+                err = e
+
         elif cmd == "RETURN":
             return args
 

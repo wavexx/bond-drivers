@@ -23,14 +23,14 @@ https://github.com/wavexx/python-bond
 Driver matrix
 =============
 
-========== ==== ==== ======== ====== ====== ===== === === ========
-Language   Call Eval Ev/Block Except Export N/Ser Out Rec Trans/Ex
-========== ==== ==== ======== ====== ====== ===== === === ========
+========== ==== ==== ======== ====== ====== ===== === === ======== =====
+Language   Call Eval Ev/Block Except Export N/Ser Out Rec Trans/Ex XCall
+========== ==== ==== ======== ====== ====== ===== === === ======== =====
 JavaScript ✓    ✓    ✓        ✓      ✓      ✓     ✓   ✓   ✓
 PHP        ✓    ✓    ✓        ✓      ✓            ✓   ✓   ✓
 Perl       ✓    ✓    ✓        ✓      ✓            ✓   ✓   ✓
-Python     ✓    ✓    ✓        ✓      ✓      ✓     ✓   ✓   ✓
-========== ==== ==== ======== ====== ====== ===== === === ========
+Python     ✓    ✓    ✓        ✓      ✓      ✓     ✓   ✓   ✓        ✓
+========== ==== ==== ======== ====== ====== ===== === === ======== =====
 
 Call:
   Can "call" a native function by applying the supplied list of arguments to a
@@ -59,6 +59,9 @@ Rec:
 
 Trans/Ex:
   Allows exceptions themselves to be serialized.
+
+XCall:
+  "call" supports immediate, unevaluated code references.
 
 
 Host matrix
