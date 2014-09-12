@@ -154,7 +154,7 @@ function __BOND_loads($string)
 // Recursive repl
 $__BOND_TRANS_EXCEPT = null;
 
-function __BOND_call($name, $args)
+function __BOND_remote($name, $args)
 {
   $code = __BOND_dumps(array($name, $args));
   __BOND_sendline("CALL $code");
@@ -198,6 +198,35 @@ function __BOND_exec($code)
   if($err) throw new Exception($err['message']);
 }
 
+function __BOND_call($name, $args)
+{
+  $ret = null;
+  if(is_callable($name))
+  {
+    // special-case regular functions for performance
+    __BOND_clear_error();
+    $ret = @call_user_func_array($name, $args);
+    $err = __BOND_get_error();
+    if($err) throw new Exception($err['message']);
+  }
+  elseif(preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/", $name))
+  {
+    // avoid fatal errors, but still emit proper exceptions as opposed to "warnings"
+    throw new Exception("undefined function \"$name\"");
+  }
+  else
+  {
+    // construct a string that we can interpret "function-like", to
+    // handle also function references and method calls uniformly
+    $args_ = array();
+    foreach($args as &$el)
+      $args_[] = var_export($el, true);
+    $args_ = implode(", ", $args_);
+    $ret = __BOND_eval("$name($args_)");
+  }
+  return $ret;
+}
+
 function __BOND_repl()
 {
   global $__BOND_BUFFERS, $__BOND_TRANS_EXCEPT;
@@ -227,7 +256,7 @@ function __BOND_repl()
 	$err = "Function \"$name\" already exists";
       else
       {
-	$code = "function $name() { return __BOND_call('$args', func_get_args()); }";
+	$code = "function $name() { return __BOND_remote('$args', func_get_args()); }";
 	__BOND_clear_error();
 	@eval($code);
 	$err = __BOND_get_error();
@@ -235,31 +264,18 @@ function __BOND_repl()
       break;
 
     case "CALL":
+      try { $ret = __BOND_call($args[0], $args[1]); }
+      catch(Exception $e) { $err = $e; }
+      break;
+
+    case "XCALL":
       try
       {
 	$name = $args[0];
-	if(is_callable($name))
-	{
-	  // special-case regular functions for performance
-	  __BOND_clear_error();
-	  $ret = @call_user_func_array($args[0], $args[1]);
-	  $err = __BOND_get_error();
-	}
-	elseif(preg_match("/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/", $name))
-	{
-	  // avoid fatal errors, but still emit proper exceptions as opposed to "warnings"
-	  throw new Exception("undefined function \"$name\"");
-	}
-	else
-	{
-	  // construct a string that we can interpret "function-like", to
-	  // handle also function references and method calls uniformly
-	  $args_ = array();
-	  foreach($args[1] as $el)
-	    $args_[] = var_export($el, true);
-	  $args_ = implode(", ", $args_);
-	  $ret = __BOND_eval("$name($args_)");
-	}
+	$xargs = array();
+	foreach($args[1] as &$el)
+	  $xargs[] = (!$el[0]? $el[1]: __BOND_eval($el[1]));
+	$ret = __BOND_call($name, $xargs);
       }
       catch(Exception $e)
       {
