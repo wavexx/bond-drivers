@@ -27,7 +27,7 @@ Driver matrix
 Language   Call Eval Ev/Block Except Export N/Ser Out Rec Trans/Ex XCall
 ========== ==== ==== ======== ====== ====== ===== === === ======== =====
 JavaScript ✓    ✓    ✓        ✓      ✓      ✓     ✓   ✓   ✓        ✓
-PHP        ✓    ✓    ✓        ✓      ✓            ✓   ✓   ✓
+PHP        ✓    ✓    ✓        ✓      ✓            ✓   ✓   ✓        ✓
 Perl       ✓    ✓    ✓        ✓      ✓            ✓   ✓   ✓        ✓
 Python     ✓    ✓    ✓        ✓      ✓      ✓     ✓   ✓   ✓        ✓
 ========== ==== ==== ======== ====== ====== ===== === === ======== =====
