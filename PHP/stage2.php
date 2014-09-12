@@ -185,7 +185,7 @@ function __BOND_exec($code)
   @eval("call_user_func(function()
   {
     extract(\$GLOBALS, EXTR_REFS);
-    { $code }
+    { $code; }
     \$__BOND_VARS = get_defined_vars();
     foreach(\$__BOND_VARS as \$k => &\$v)
       if(!isset(\$GLOBALS[\$k]))
