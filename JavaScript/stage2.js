@@ -58,7 +58,7 @@ function __BOND_loads(string)
 // Recursive repl
 var __BOND_TRANS_EXCEPT;
 
-function __BOND_call(name, args)
+function __BOND_remote(name, args)
 {
   var code = __BOND_dumps([name, args]);
   __BOND_sendline("CALL " + code);
@@ -69,7 +69,7 @@ function __BOND_export(name)
 {
   global[name] = function()
   {
-    return __BOND_call(name, Array.prototype.slice.call(arguments));
+    return __BOND_remote(name, Array.prototype.slice.call(arguments));
   };
 }
 
@@ -122,8 +122,8 @@ function __BOND_repl()
 	var xargs = [];
 	for(var i = 0; i != args[1].length; ++i)
 	{
-	  var arg = args[1][i];
-	  xargs.push(!arg[0]? arg[1]: eval.call(null, "(" + arg[1] + ")"));
+	  var el = args[1][i];
+	  xargs.push(!el[0]? el[1]: eval.call(null, "(" + el[1] + ")"));
 	}
 	ret = func.apply(null, xargs);
       }

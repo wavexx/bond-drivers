@@ -74,7 +74,7 @@ sub __BOND_sendline
 # Recursive repl
 my $__BOND_TRANS_EXCEPT;
 
-sub __BOND_call($$)
+sub __BOND_remote($$)
 {
   my ($name, $args) = @_;
   my $code = __BOND_dumps([$name, $args]);
@@ -115,23 +115,21 @@ sub __BOND_repl()
     }
     elsif($cmd eq "EXPORT")
     {
-      my $code = "sub $args { __BOND_call('$args', \\\@_) }";
+      my $code = "sub $args { __BOND_remote('$args', \\\@_) }";
       $ret = eval $code;
       $err = $@;
     }
     elsif($cmd eq "CALL")
     {
-      no strict 'refs';
-      my $name = $args->[0];
-
       # NOTE: note that we use "dump" to evaluate the command as a pure string.
       #       This allows us to execute *most* perl special forms consistenly.
       # TODO: special-case builtins to allow transparent invocation and higher
       #       performance with regular functions.
+      my $name = $args->[0];
       my @args = @{$args->[1]};
       my $args_ = Data::Dump::dump(@args);
       $args_ = "($args_)" if @args == 1;
-      $ret = [eval ($name . ' ' . $args_)];
+      $ret = [__BOND_eval("$name $args_")];
       $err = $@;
       $ret = $ret->[0] if @$ret == 1;
     }
@@ -139,9 +137,9 @@ sub __BOND_repl()
     {
       my $name = $args->[0];
       my @xargs;
-      for my $arg(@{$args->[1]})
+      for my $el(@{$args->[1]})
       {
-	my $val = (!$arg->[0]? $arg->[1]: __BOND_eval($arg->[1]));
+	my $val = (!$el->[0]? $el->[1]: __BOND_eval($el->[1]));
 	push(@xargs, Data::Dump::dump($val));
       }
       my $xargs_ = join(",", @xargs);

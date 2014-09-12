@@ -94,12 +94,12 @@ def __BOND_loads(buf):
 # Recursive repl
 __BOND_TRANS_EXCEPT = None
 
-def __BOND_call(name, args):
+def __BOND_remote(name, args):
     __BOND_sendstate("CALL", __BOND_dumps([name, args]))
     return __BOND_repl()
 
 def __BOND_export(name):
-    globals()[name] = lambda *args: __BOND_call(name, args)
+    globals()[name] = lambda *args: __BOND_remote(name, args)
 
 def __BOND_repl():
     SENTINEL = 1
@@ -135,8 +135,8 @@ def __BOND_repl():
             try:
                 func = eval(args[0], globals())
                 xargs = []
-                for arg in args[1]:
-                    xargs.append(arg[1] if not arg[0] else eval(arg[1], globals()))
+                for el in args[1]:
+                    xargs.append(el[1] if not el[0] else eval(el[1], globals()))
                 ret = func(*xargs)
             except Exception as e:
                 err = e
