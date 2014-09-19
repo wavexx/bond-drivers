@@ -17,7 +17,7 @@ requirement of an open communication channel to a REPL.
 Documentation is still incomplete. Please refer to the current reference host
 implementation for further information:
 
-https://github.com/wavexx/python-bond
+http://www.thregr.org/~wavexx/software/python-bond/
 
 
 Driver matrix
@@ -88,7 +88,7 @@ Recursive:
 Trans/Ex:
   Allows exceptions themselves to be serialized.
 
-.. _Python: https://github.com/wavexx/python-bond
+.. _Python: http://www.thregr.org/~wavexx/software/python-bond/
 
 
 Authors and Copyright
@@ -101,4 +101,4 @@ bond-drivers's GIT repository is publicly accessible at::
 
   git://src.thregr.org/bond-drivers
 
-or at `GitHub <https://github.com/wavexx/bond-drivers>`_.
+or at https://github.com/wavexx/bond-drivers
