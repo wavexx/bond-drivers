@@ -1,6 +1,6 @@
 /// bond Javascript interface setup
-/// NOTE: use /// for comments only, as this code is transformed into a single
-///       line to be injected into the interpreter *without parsing*.
+/// NOTE: use /// for comments *only*, as this code is transformed into a
+///       single line to be injected into the interpreter *without parsing*.
 var fs = require("fs");
 
 /// Define some constants/methods that will be used also in stage2
@@ -22,7 +22,7 @@ function __BOND_getline()
 /// Actual loader
 (function()
 {
-  console.log("STAGE2");
+  console.log("stage2".toUpperCase());
   var line;
   while((line = __BOND_getline()).length == 0);
   var stage2 = JSON.parse(line);

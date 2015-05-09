@@ -4,8 +4,8 @@
 
 def __BOND_stage1():
     import sys, json
-    sys.stdout.write("STAGE2\n")
-    sys.stdout.flush();
+    sys.stdout.write("stage2\n".upper())
+    sys.stdout.flush()
     line = sys.stdin.readline().rstrip()
     stage2 = json.loads(line)
     exec(stage2['code'], globals())

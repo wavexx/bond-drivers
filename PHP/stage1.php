@@ -7,7 +7,7 @@
 /// from within an anonymous scope as this would obliterate our global
 /// definitions in stage2. As such, just prefix all global variables. We use
 /// our own "eval" wrapper to control this behavior, but it's defined later.
-echo "STAGE2\n"; flush();
+echo strtoupper("stage2\n"); flush();
 $__BOND_STDIN = fopen("php://stdin", "r");
 $__BOND_STAGE2 = json_decode(rtrim(fgets($__BOND_STDIN)));
 eval($__BOND_STAGE2->code);

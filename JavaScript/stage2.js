@@ -197,7 +197,7 @@ function __BOND_start(proto, trans_except)
   process.stdin.read = function() { return undefined; };
 
   __BOND_TRANS_EXCEPT = trans_except;
-  __BOND_sendline("READY");
+  __BOND_sendline("ready".toUpperCase());
   var ret = __BOND_repl();
   __BOND_sendline("BYE");
   process.exit(ret);

@@ -216,7 +216,7 @@ sub __BOND_start($$)
   };
 
   $__BOND_TRANS_EXCEPT = $trans_except;
-  __BOND_sendline("READY");
+  __BOND_sendline(uc("ready"));
   my $ret = __BOND_repl();
   __BOND_sendline("BYE");
   exit($ret);

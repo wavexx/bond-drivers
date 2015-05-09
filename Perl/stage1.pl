@@ -13,7 +13,7 @@ require JSON or die($@);
 sub
 {
   STDOUT->autoflush();
-  print("STAGE2\n");
+  print(uc("stage2\n"));
 
   my $line = <STDIN>;
   my $stage2 = JSON::decode_json($line);

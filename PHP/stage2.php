@@ -350,7 +350,7 @@ function __BOND_start($proto, $trans_except)
   $__BOND_ERROR_LEVEL = error_reporting();
   set_error_handler('__BOND_error_handler');
 
-  __BOND_sendline("READY");
+  __BOND_sendline(strtoupper("ready"));
   $ret = __BOND_repl();
   __BOND_sendline("BYE");
   exit($ret);

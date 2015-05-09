@@ -196,7 +196,7 @@ def __BOND_start(proto, trans_except):
     sys.stdin = open(os.devnull)
 
     __BOND_TRANS_EXCEPT = trans_except
-    __BOND_sendstate("READY")
+    __BOND_sendstate("ready".upper())
     ret = __BOND_repl()
     __BOND_sendstate("BYE")
     exit(ret)
