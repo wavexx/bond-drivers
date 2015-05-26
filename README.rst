@@ -71,6 +71,7 @@ Host matrix
 Language Except Export N/Ser Recursive Trans/Ex
 ======== ====== ====== ===== ========= ========
 Python_  ✓      ✓      ✓     ✓         ✓
+Julia_   ✓      ✓            ✓          
 ======== ====== ====== ===== ========= ========
 
 Except:
@@ -89,6 +90,7 @@ Trans/Ex:
   Allows exceptions themselves to be serialized.
 
 .. _Python: http://www.thregr.org/~wavexx/software/python-bond/
+.. _Julia: http://www.thregr.org/~wavexx/software/julia-bond/
 
 
 Authors and Copyright
