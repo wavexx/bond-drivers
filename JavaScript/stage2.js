@@ -79,9 +79,9 @@ function __BOND_repl()
   var line;
   while((line = __BOND_getline()))
   {
-    line = /^([^ ]+)( (.*))?/.exec(line);
-    var cmd = line[1];
-    var args = (line[3] !== undefined? __BOND_loads(line[3]): []);
+    var spc = line.indexOf(" ");
+    var cmd = line.substring(0, spc < 0? undefined: spc);
+    var args = (spc > 0? __BOND_loads(line.substring(spc + 1)): []);
 
     var ret = null;
     var err = null;
